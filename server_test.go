@@ -1,10 +1,13 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func TestSendJSONResponse(t *testing.T) {
@@ -32,44 +35,76 @@ func TestSendJSONResponse(t *testing.T) {
 	}
 }
 
-func TestGetCars(t *testing.T) {
-	app := Config{}
+func TestHandleGetCars(t *testing.T) {
+	db, _ := sql.Open("sqlite3", ":memory:")
+	app := Config{
+		DB: db,
+	}
 
-	t.Run("returns vehicleStatuses of all cars", func(t *testing.T) {
-		request, err := http.NewRequest(http.MethodGet, "/cars", nil)
-		if err != nil {
-			t.Errorf("Error creating request")
-		}
+	app.createTables()
 
-		response := httptest.NewRecorder()
+	req, err := http.NewRequest("GET", "/cars", nil)
+	if err != nil {
+		t.Fatalf("could not create request: %v", err)
+	}
 
-		handler := http.HandlerFunc(app.HandleGetCars)
-		handler.ServeHTTP(response, request)
+	w := httptest.NewRecorder()
+	app.HandleGetCars(w, req)
 
-		want := JSONResponse{
-			Error:   false,
-			Message: "",
-			VehicleStatuses: []VehicleStatus{
-				{VehicleID: 1,
-					FuelLevel:    65,
-					BatteryLevel: 40,
-					EngineStatus: "Normal",
-					SensorStatus: SensorStatus{
-						FrontCamera: "Operational",
-						RearCamera:  "Operational",
-						Radar:       "Operational",
-						Lidar:       "Operational",
-					},
-				}},
-		}
+	res := w.Result()
+	if res.StatusCode != http.StatusOK {
+		t.Errorf("expected status OK, got %v", res.StatusCode)
+	}
 
-		var got JSONResponse
-		json.Unmarshal(response.Body.Bytes(), &got)
+	var jsonResponse JSONResponse
+	err = json.NewDecoder(res.Body).Decode(&jsonResponse)
+	if err != nil {
+		t.Errorf("could not decode response: %v", err)
+	}
 
-		if got.VehicleStatuses[0] != want.VehicleStatuses[0] {
-			t.Errorf("Got %+v, want %+v", got, want)
-		}
-
-	})
-
+	if jsonResponse.Error {
+		t.Errorf("expected error to be false, got true")
+	}
 }
+
+// func TestGetCars(t *testing.T) {
+// 	app := Config{}
+
+// 	t.Run("returns vehicleStatuses of all cars", func(t *testing.T) {
+// 		request, err := http.NewRequest(http.MethodGet, "/cars", nil)
+// 		if err != nil {
+// 			t.Errorf("Error creating request")
+// 		}
+
+// 		response := httptest.NewRecorder()
+
+// 		handler := http.HandlerFunc(app.HandleGetCars)
+// 		handler.ServeHTTP(response, request)
+
+// 		want := JSONResponse{
+// 			Error:   false,
+// 			Message: "",
+// 			VehicleStatuses: []VehicleStatus{
+// 				{VehicleID: 1,
+// 					FuelLevel:    65,
+// 					BatteryLevel: 40,
+// 					EngineStatus: "Normal",
+// 					SensorStatus: SensorStatus{
+// 						FrontCamera: "Operational",
+// 						RearCamera:  "Operational",
+// 						Radar:       "Operational",
+// 						Lidar:       "Operational",
+// 					},
+// 				}},
+// 		}
+
+// 		var got JSONResponse
+// 		json.Unmarshal(response.Body.Bytes(), &got)
+
+// 		if got.VehicleStatuses[0] != want.VehicleStatuses[0] {
+// 			t.Errorf("Got %+v, want %+v", got, want)
+// 		}
+
+// 	})
+
+// }

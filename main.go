@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 
 	_ "github.com/lib/pq"
 )
@@ -35,7 +36,11 @@ func main() {
 }
 
 func connectToDB() (*sql.DB, error) {
-	dsn := "host=localhost port=5432 user=admin password=postgres dbname=vehicles sslmode=disable timezone=UTC connect_timeout=5"
+	dsn := os.Getenv("DATABASE_URL")
+	if dsn == "" {
+		dsn = "host=localhost port=5432 user=admin password=postgres dbname=vehicles sslmode=disable timezone=UTC connect_timeout=5"
+	}
+	fmt.Printf("TESTING: %s", dsn)
 
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
