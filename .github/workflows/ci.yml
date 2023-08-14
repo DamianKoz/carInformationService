@@ -37,6 +37,9 @@ jobs:
         with:
           go-version: "1.20"
 
+      - name: Install SQLite
+        run: go install github.com/mattn/go-sqlite3
+
       - name: Run tests
         run: go test ./...
         env:
