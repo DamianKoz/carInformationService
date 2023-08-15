@@ -2,11 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 func TestSendJSONResponse(t *testing.T) {
@@ -36,12 +35,18 @@ func TestSendJSONResponse(t *testing.T) {
 
 func TestHandleGetCars(t *testing.T) {
 	db, err := connectToDB()
+	if err != nil {
+		panic(fmt.Sprintf("Could not connect db. Error: %v", err))
+	}
 
 	app := Config{
 		DB: db,
 	}
 
-	app.createTables()
+	err = app.initDB()
+	if err != nil {
+		panic(fmt.Sprintf("Could not connect db. Error: %v", err))
+	}
 
 	req, err := http.NewRequest("GET", "/cars", nil)
 	if err != nil {
