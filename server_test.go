@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -36,7 +35,8 @@ func TestSendJSONResponse(t *testing.T) {
 }
 
 func TestHandleGetCars(t *testing.T) {
-	db, _ := sql.Open("sqlite3", ":memory:")
+	db, err := connectToDB()
+
 	app := Config{
 		DB: db,
 	}
