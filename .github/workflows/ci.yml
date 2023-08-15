@@ -43,4 +43,4 @@ jobs:
       - name: Run tests
         run: go test ./...
         env:
-          DATABASE_URL: "host=localhost port=5432 user=admin password=postgres dbname=testdb sslmode=disable"
+          DATABASE_URL: "host=localhost port=5432 user=admin password=postgres dbname=vehicles sslmode=disable"
